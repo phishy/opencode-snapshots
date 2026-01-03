@@ -1,6 +1,6 @@
 # OpenCode Snapshot Browser
 
-A web UI and CLI tool to browse, view diffs, and export file changes made by [OpenCode](https://github.com/opencode-ai/opencode) sessions.
+A web UI to browse, view diffs, and export file changes made by [OpenCode](https://github.com/opencode-ai/opencode) sessions.
 
 ## Features
 
@@ -8,33 +8,20 @@ A web UI and CLI tool to browse, view diffs, and export file changes made by [Op
 - View file changes from each coding session
 - Side-by-side diff viewer with before/after toggle
 - Export session changes as ZIP files
-- CLI tool for quick terminal access
 
 ## Installation
 
 ```bash
-cd web
 npm install
 ```
 
 ## Usage
 
-### Web UI
-
 ```bash
-cd web
 npm run dev
 ```
 
 Open http://localhost:3000
-
-### CLI Tool
-
-```bash
-node run.js
-```
-
-Interactive terminal interface to browse projects and snapshots.
 
 ## How It Works
 
@@ -61,13 +48,10 @@ This tool reads from `session_diff/` to display the actual file changes made dur
 ## Project Structure
 
 ```
-savecode/
-├── run.js              # CLI tool
-├── web/                # Next.js web app
-│   ├── src/
-│   │   ├── app/        # Pages and API routes
-│   │   └── lib/        # OpenCode data access
-│   └── package.json
+├── src/
+│   ├── app/            # Pages and API routes
+│   └── lib/            # OpenCode data access
+├── package.json
 └── README.md
 ```
 
