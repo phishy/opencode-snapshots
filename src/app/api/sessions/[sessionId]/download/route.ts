@@ -1,36 +1,30 @@
 import { NextResponse } from "next/server";
-import { getSessionDiff } from "@/lib/opencode";
-import archiver from "archiver";
-import { Readable } from "stream";
+import { getSessionInfo, getSnapshotArchive } from "@/lib/opencode";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const { sessionId } = await params;
-  const diffs = getSessionDiff(sessionId);
+  const info = getSessionInfo(sessionId);
 
-  if (diffs.length === 0) {
-    return NextResponse.json({ error: "No files found" }, { status: 404 });
+  if (!info) {
+    return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  const archive = archiver("zip", { zlib: { level: 9 } });
-  const chunks: Buffer[] = [];
-
-  archive.on("data", (chunk) => chunks.push(chunk));
-
-  for (const diff of diffs) {
-    if (diff.after) {
-      archive.append(diff.after, { name: diff.file });
-    }
+  if (!info.session.snapshot) {
+    return NextResponse.json({ error: "No snapshot available for this session" }, { status: 404 });
   }
 
-  await archive.finalize();
+  const archive = getSnapshotArchive(info.projectId, info.session.snapshot);
 
-  const buffer = Buffer.concat(chunks);
+  if (!archive) {
+    return NextResponse.json({ error: "Failed to create archive" }, { status: 500 });
+  }
+
   const filename = `${sessionId}.zip`;
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(new Uint8Array(archive), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${filename}"`,

@@ -9,7 +9,7 @@ A web UI to browse, view diffs, and export file changes made by [OpenCode](https
 - Browse all OpenCode projects with session counts
 - View file changes from each coding session
 - Side-by-side diff viewer with before/after toggle
-- Export session changes as ZIP files
+- Download full project snapshot as ZIP
 
 ## Installation
 
@@ -63,7 +63,7 @@ This tool reads from `session_diff/` to display the actual file changes made dur
 |-------|-------------|
 | `GET /api/projects` | List all projects |
 | `GET /api/projects/[id]/changes` | Get session changes for a project |
-| `GET /api/sessions/[sessionId]/download` | Download session changes as ZIP |
+| `GET /api/sessions/[sessionId]/download` | Download full project snapshot as ZIP |
 
 ## License
 

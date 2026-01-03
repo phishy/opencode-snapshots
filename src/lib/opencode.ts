@@ -189,6 +189,43 @@ export function getSessionDiff(sessionId: string): FileDiff[] {
   return readJSON<FileDiff[]>(diffFile) || [];
 }
 
+export function getSessionInfo(sessionId: string): { projectId: string; session: Session } | null {
+  const sessionDir = path.join(STORAGE_BASE, "session");
+  if (!fs.existsSync(sessionDir)) return null;
+
+  for (const projectId of fs.readdirSync(sessionDir)) {
+    const projectSessionDir = path.join(sessionDir, projectId);
+    const stat = fs.statSync(projectSessionDir);
+    if (!stat.isDirectory()) continue;
+
+    const sessionFile = path.join(projectSessionDir, `${sessionId}.json`);
+    if (fs.existsSync(sessionFile)) {
+      const data = readJSON<{
+        id: string;
+        title: string;
+        time?: { created?: number; updated?: number };
+        revert?: { snapshot?: string };
+        summary?: { additions: number; deletions: number; files: number };
+      }>(sessionFile);
+      
+      if (data) {
+        return {
+          projectId,
+          session: {
+            id: data.id,
+            title: data.title,
+            created: data.time?.created || 0,
+            updated: data.time?.updated || 0,
+            snapshot: data.revert?.snapshot,
+            summary: data.summary,
+          },
+        };
+      }
+    }
+  }
+  return null;
+}
+
 export function getSnapshotFiles(projectId: string, hash: string): FileEntry[] {
   const project = getProject(projectId);
   if (!project) return [];
