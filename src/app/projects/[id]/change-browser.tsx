@@ -72,7 +72,7 @@ function DiffViewer({ file }: { file: FileDiff }) {
   const isDeleted = file.before && !file.after;
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden">
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden min-w-0">
       <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
         <span className="font-mono text-sm text-zinc-300">{file.file}</span>
         <div className="flex items-center gap-1">
@@ -103,7 +103,7 @@ function DiffViewer({ file }: { file: FileDiff }) {
         </div>
       </div>
       <div className="max-h-[400px] overflow-auto">
-        <pre className="text-xs leading-relaxed">
+        <pre className="text-xs leading-relaxed min-w-0">
           {viewMode === "diff" ? (
             computeDiff(file.before, file.after).map((line, i) => {
               let className = "px-4 py-0.5 block ";
@@ -141,7 +141,7 @@ export function ChangeBrowser({ changes }: Props) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[350px_minmax(0,1fr)]">
       <div>
         <h2 className="mb-2 text-lg font-semibold">Sessions with Changes</h2>
         <p className="mb-3 text-xs text-zinc-500">
@@ -175,7 +175,7 @@ export function ChangeBrowser({ changes }: Props) {
         </div>
       </div>
 
-      <div>
+      <div className="min-w-0">
         {selectedChange ? (
           <div>
             <div className="mb-4 flex items-start justify-between">

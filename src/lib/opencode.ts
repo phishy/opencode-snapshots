@@ -56,6 +56,16 @@ export interface FileEntry {
   name: string;
 }
 
+export interface Snapshot {
+  hash: string;
+  timestamp: number;
+  type: "step-start" | "step-finish";
+  sessionId: string;
+  sessionTitle?: string;
+  messageId: string;
+  fileCount?: number;
+}
+
 function readJSON<T>(filePath: string): T | null {
   try {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -269,4 +279,131 @@ export function getDiff(projectId: string, fromHash: string, toHash: string): st
   const project = getProject(projectId);
   if (!project) return "";
   return git(project.gitDir, `diff "${fromHash}" "${toHash}"`);
+}
+
+export function getLatestSnapshot(projectId: string): string | null {
+  const project = getProject(projectId);
+  if (!project) return null;
+
+  try {
+    const hash = execSync(
+      `git --git-dir="${project.gitDir}" write-tree`,
+      { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }
+    ).trim();
+    return hash || null;
+  } catch {
+    return null;
+  }
+}
+
+function extractTimestampFromId(id: string): number {
+  const match = id.match(/^(?:prt|msg)_([a-f0-9]+)/);
+  if (match) {
+    const hex = match[1];
+    const timestamp = parseInt(hex.slice(0, 11), 16);
+    if (timestamp > 1600000000000 && timestamp < 2000000000000) {
+      return timestamp;
+    }
+  }
+  return 0;
+}
+
+export function getSnapshots(projectId: string): Snapshot[] {
+  const snapshots: Snapshot[] = [];
+  const seenHashes = new Set<string>();
+  
+  const projectSessions = new Set<string>();
+  const sessionTitles = new Map<string, string>();
+  const sessionDir = path.join(STORAGE_BASE, "session", projectId);
+  if (fs.existsSync(sessionDir)) {
+    for (const f of fs.readdirSync(sessionDir).filter((f) => f.endsWith(".json"))) {
+      const data = readJSON<{ id: string; title: string }>(path.join(sessionDir, f));
+      if (data) {
+        projectSessions.add(data.id);
+        sessionTitles.set(data.id, data.title);
+      }
+    }
+  }
+
+  const partDir = path.join(STORAGE_BASE, "part");
+  if (!fs.existsSync(partDir)) return snapshots;
+
+  const messageDirs = fs.readdirSync(partDir).filter((d) => {
+    try {
+      return fs.statSync(path.join(partDir, d)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+  for (const messageDir of messageDirs) {
+    const messagePath = path.join(partDir, messageDir);
+    let partFiles: string[];
+    try {
+      partFiles = fs.readdirSync(messagePath).filter((f) => f.endsWith(".json"));
+    } catch {
+      continue;
+    }
+
+    for (const partFile of partFiles) {
+      const partPath = path.join(messagePath, partFile);
+      const part = readJSON<{
+        id: string;
+        sessionID: string;
+        messageID: string;
+        type: string;
+        snapshot?: string;
+        time?: { created?: number };
+      }>(partPath);
+
+      if (!part?.snapshot) continue;
+      if (part.type !== "step-start" && part.type !== "step-finish") continue;
+      if (!projectSessions.has(part.sessionID)) continue;
+      if (seenHashes.has(part.snapshot)) continue;
+      seenHashes.add(part.snapshot);
+
+      let timestamp = part.time?.created || 0;
+      if (!timestamp && part.id) {
+        timestamp = extractTimestampFromId(part.id);
+      }
+      if (!timestamp) {
+        try {
+          timestamp = fs.statSync(partPath).mtimeMs;
+        } catch {
+          timestamp = 0;
+        }
+      }
+
+      snapshots.push({
+        hash: part.snapshot,
+        timestamp,
+        type: part.type as "step-start" | "step-finish",
+        sessionId: part.sessionID,
+        sessionTitle: sessionTitles.get(part.sessionID),
+        messageId: part.messageID,
+      });
+    }
+  }
+
+  return snapshots.sort((a, b) => b.timestamp - a.timestamp);
+}
+
+export function getSnapshotFileCount(projectId: string, hash: string): number {
+  const project = getProject(projectId);
+  if (!project) return 0;
+
+  const output = git(project.gitDir, `ls-tree -r "${hash}" | wc -l`);
+  return parseInt(output.trim(), 10) || 0;
+}
+
+export function validateSnapshotHash(projectId: string, hash: string): boolean {
+  const project = getProject(projectId);
+  if (!project) return false;
+
+  // Validate hash format
+  if (!/^[a-f0-9]{40}$/.test(hash)) return false;
+
+  // Check if object exists and is a tree
+  const type = git(project.gitDir, `cat-file -t "${hash}"`);
+  return type === "tree";
 }
