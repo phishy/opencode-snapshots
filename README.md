@@ -2,6 +2,8 @@
 
 A web UI to browse, view diffs, and export file changes made by [OpenCode](https://github.com/opencode-ai/opencode) sessions.
 
+![Screenshot](screenshot.png)
+
 ## Features
 
 - Browse all OpenCode projects with session counts
