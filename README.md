@@ -14,6 +14,7 @@ A web UI to browse, view diffs, and **recover files** from [OpenCode](https://gi
 - **Timeline View**: Navigate through thousands of snapshots captured during AI interactions
 - **File Recovery**: Download any snapshot as ZIP to recover lost work
 - **Latest Snapshot**: Always-available current state export
+- **Search**: Find snapshots by searching conversation text (prompts and responses)
 
 ## Why This Exists
 
@@ -79,6 +80,8 @@ This tool scans all parts, extracts snapshot hashes, and uses `git archive` to c
 | `GET /api/snapshots/[projectId]/[hash]/files` | List files in snapshot |
 | `GET /api/snapshots/[projectId]/[hash]/files?path=...` | Get file content |
 | `GET /api/snapshots/[projectId]/[hash]/download` | Download snapshot as ZIP |
+| `GET /api/sessions/[sessionId]/download` | Download session's latest snapshot as ZIP |
+| `GET /api/search?q=...` | Search conversations for snapshots |
 
 ## License
 
