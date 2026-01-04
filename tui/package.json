@@ -1,0 +1,27 @@
+{
+  "name": "opencode-snapshot-tui",
+  "version": "1.0.0",
+  "description": "Terminal UI for browsing OpenCode snapshots",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "opencode-snapshot": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.tsx",
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "ink": "^5.0.1",
+    "ink-text-input": "^6.0.0",
+    "react": "^18.3.1",
+    "chalk": "^5.3.0",
+    "figures": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2"
+  }
+}

@@ -17,6 +17,7 @@ interface FileEntry {
   hash: string;
   path: string;
   name: string;
+  fullPath?: string;
 }
 
 interface Props {
@@ -146,6 +147,7 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
                   {renderFileTree(
                     dirFiles.map((f) => ({
                       ...f,
+                      fullPath: f.fullPath || f.path,
                       path: f.path.slice(dir.length + 1),
                       name: f.path.slice(dir.length + 1).split("/").pop() || f.name,
                     })),
@@ -156,21 +158,24 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
             </div>
           );
         })}
-        {sortedFiles.map((file) => (
-          <button
-            key={file.path}
-            onClick={() => loadFileContent(file)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors ${
-              selectedFile?.path === file.path
-                ? "bg-oc-blue/20 text-oc-blue"
-                : "hover:bg-oc-bg-elevated text-oc-text-base"
-            }`}
-            style={{ paddingLeft: `${depth * 16 + 24}px` }}
-          >
-            <span className="text-oc-text-weak text-xs">◇</span>
-            {file.name}
-          </button>
-        ))}
+        {sortedFiles.map((file) => {
+          const actualPath = file.fullPath || file.path;
+          return (
+            <button
+              key={actualPath}
+              onClick={() => loadFileContent({ ...file, path: actualPath })}
+              className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors ${
+                selectedFile?.path === actualPath
+                  ? "bg-oc-blue/20 text-oc-blue"
+                  : "hover:bg-oc-bg-elevated text-oc-text-base"
+              }`}
+              style={{ paddingLeft: `${depth * 16 + 24}px` }}
+            >
+              <span className="text-oc-text-weak text-xs">◇</span>
+              {file.name}
+            </button>
+          );
+        })}
       </>
     );
   }

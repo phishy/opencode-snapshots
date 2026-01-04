@@ -1,6 +1,8 @@
-# 📸 OpenCode Snapshot Browser
+# OpenCode Snapshot Browser
 
-A web UI to browse, view diffs, and **recover files** from [OpenCode](https://github.com/opencode-ai/opencode) sessions.
+Browse, view diffs, and **recover files** from [OpenCode](https://github.com/opencode-ai/opencode) sessions.
+
+Available as both a **terminal UI** and a **web interface**.
 
 <p>
   <img src="screenshot-index.png" width="49%" />
@@ -9,12 +11,86 @@ A web UI to browse, view diffs, and **recover files** from [OpenCode](https://gi
 
 ## Features
 
-- 🔀 **Session Changes**: View file diffs from each coding session with before/after toggle
-- 📂 **Snapshot Browser**: Browse complete project state at any point in time
-- ⏱️ **Timeline View**: Navigate through thousands of snapshots captured during AI interactions
-- 💾 **File Recovery**: Download any snapshot as ZIP to recover lost work
-- ✨ **Latest Snapshot**: Always-available current state export
-- 🔍 **Search**: Find snapshots by searching conversation text (prompts and responses)
+- **Snapshot Browser**: Browse complete project state at any point in time
+- **Session Changes**: View file diffs from each coding session with before/after toggle
+- **Timeline View**: Navigate through thousands of snapshots captured during AI interactions
+- **File Recovery**: Download any snapshot as ZIP to recover lost work
+- **Search**: Find snapshots by searching conversation text (prompts and responses)
+
+## Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Build the TUI
+npm run tui:install
+npm run tui:build
+
+# Link the CLI globally (optional)
+npm link
+```
+
+## Usage
+
+### Quick Start
+
+```bash
+ocs              # Launch terminal UI (default)
+ocs serve        # Start web server at http://localhost:3000
+```
+
+### All Commands
+
+| Command | Description |
+|---------|-------------|
+| `ocs` | Launch terminal UI |
+| `ocs tui` | Launch terminal UI |
+| `ocs serve` | Start web server (development mode) |
+| `ocs web` | Start web server (alias for serve) |
+| `ocs start` | Start web server (production mode) |
+| `ocs help` | Show help |
+
+### Without Global Install
+
+```bash
+node bin/ocs.mjs          # TUI
+node bin/ocs.mjs serve    # Web server
+```
+
+## Terminal UI
+
+The TUI provides keyboard-driven navigation optimized for quick browsing.
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `j` / `k` | Navigate up/down |
+| `Enter` | Select / Open |
+| `Esc` | Go back |
+| `Tab` | Switch tabs |
+| `d` | Download snapshot as ZIP |
+| `/` | Search conversations |
+| `?` | Show help |
+| `q` | Quit |
+
+### Screens
+
+1. **Project List**: All OpenCode projects
+2. **Project Detail**: Two tabs - Snapshots (default) and Session Changes
+3. **File Browser**: Browse files in a snapshot
+4. **File Viewer**: View file contents with scroll support
+
+## Web Interface
+
+The web UI provides a richer visual experience with the same functionality.
+
+- Project list with session counts
+- Tabbed interface for Changes and Snapshots
+- File tree browser with syntax highlighting
+- ZIP download for any snapshot
+- Full-text search across conversations
 
 ## Why This Exists
 
@@ -23,20 +99,6 @@ OpenCode captures a snapshot before every AI step (tool call), storing them as g
 - Recover a project that wasn't in version control
 - Browse file contents from any point in your AI coding sessions
 - Export complete project state from any moment in time
-
-## Installation
-
-```bash
-npm install
-```
-
-## Usage
-
-```bash
-npm run dev
-```
-
-Open http://localhost:3000
 
 ## How It Works
 
@@ -65,12 +127,12 @@ This tool scans all parts, extracts snapshot hashes, and uses `git archive` to c
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 with App Router
-- **Styling**: Tailwind CSS
+- **CLI**: Node.js
+- **TUI**: [Ink](https://github.com/vadimdemedes/ink) (React for CLI)
+- **Web**: Next.js 16 with App Router, Tailwind CSS
 - **Language**: TypeScript
-- **Archive**: git archive (via child_process)
 
-## API Routes
+## API Routes (Web)
 
 | Route | Description |
 |-------|-------------|
