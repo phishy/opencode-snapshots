@@ -2,8 +2,10 @@
 
 A web UI to browse, view diffs, and **recover files** from [OpenCode](https://github.com/opencode-ai/opencode) sessions.
 
-![Project Index](screenshot-index.png)
-![Project Detail](screenshot-project.png)
+<p>
+  <img src="screenshot-index.png" width="49%" />
+  <img src="screenshot-project.png" width="49%" />
+</p>
 
 ## Features
 
