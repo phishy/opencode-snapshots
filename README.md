@@ -1,4 +1,4 @@
-# OpenCode Snapshot Browser
+# 📸 OpenCode Snapshot Browser
 
 A web UI to browse, view diffs, and **recover files** from [OpenCode](https://github.com/opencode-ai/opencode) sessions.
 
@@ -9,12 +9,12 @@ A web UI to browse, view diffs, and **recover files** from [OpenCode](https://gi
 
 ## Features
 
-- **Session Changes**: View file diffs from each coding session with before/after toggle
-- **Snapshot Browser**: Browse complete project state at any point in time
-- **Timeline View**: Navigate through thousands of snapshots captured during AI interactions
-- **File Recovery**: Download any snapshot as ZIP to recover lost work
-- **Latest Snapshot**: Always-available current state export
-- **Search**: Find snapshots by searching conversation text (prompts and responses)
+- 🔀 **Session Changes**: View file diffs from each coding session with before/after toggle
+- 📂 **Snapshot Browser**: Browse complete project state at any point in time
+- ⏱️ **Timeline View**: Navigate through thousands of snapshots captured during AI interactions
+- 💾 **File Recovery**: Download any snapshot as ZIP to recover lost work
+- ✨ **Latest Snapshot**: Always-available current state export
+- 🔍 **Search**: Find snapshots by searching conversation text (prompts and responses)
 
 ## Why This Exists
 
