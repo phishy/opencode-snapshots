@@ -27,17 +27,31 @@ function runTui() {
 }
 
 function runWeb(isDev = true) {
-  const nextBin = path.join(rootDir, 'node_modules', '.bin', 'next');
-  const cmd = isDev ? 'dev' : 'start';
-  const extraArgs = isDev ? ['--turbopack'] : [];
-  
   console.log(`Starting web server (${isDev ? 'development' : 'production'})...`);
   console.log('Open http://localhost:3000\n');
   
-  const child = spawn(nextBin, [cmd, ...extraArgs], {
-    cwd: rootDir,
-    stdio: 'inherit',
-  });
+  let child;
+  
+  if (isDev) {
+    const nextBin = path.join(rootDir, 'node_modules', '.bin', 'next');
+    child = spawn(nextBin, ['dev', '--turbopack'], {
+      cwd: rootDir,
+      stdio: 'inherit',
+    });
+  } else {
+    // Standalone build - run the server directly
+    const serverPath = path.join(rootDir, '.next', 'standalone', 'server.js');
+    
+    if (!fs.existsSync(serverPath)) {
+      console.error('Production build not found. Run: npm run build');
+      process.exit(1);
+    }
+    
+    child = spawn('node', [serverPath], {
+      cwd: rootDir,
+      stdio: 'inherit',
+    });
+  }
   
   child.on('exit', (code) => process.exit(code || 0));
 }
