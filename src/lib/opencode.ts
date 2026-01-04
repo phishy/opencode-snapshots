@@ -85,6 +85,71 @@ function git(gitDir: string, args: string): string {
   }
 }
 
+function getProjectGitDir(id: string): string {
+  return path.join(SNAPSHOT_BASE, id);
+}
+
+export function projectExists(id: string): boolean {
+  return fs.existsSync(getProjectGitDir(id));
+}
+
+function loadProjectById(id: string): Project | null {
+  const gitDir = getProjectGitDir(id);
+  if (!fs.existsSync(gitDir)) return null;
+
+  const projectInfo = readJSON<{ worktree?: string; time?: { created?: number } }>(
+    path.join(STORAGE_BASE, "project", `${id}.json`)
+  );
+  const sessionDir = path.join(STORAGE_BASE, "session", id);
+  const sessionDiffDir = path.join(STORAGE_BASE, "session_diff");
+
+  let sessions: Session[] = [];
+  let changeCount = 0;
+
+  if (fs.existsSync(sessionDir)) {
+    const sessionFiles = fs.readdirSync(sessionDir).filter((f) => f.endsWith(".json"));
+    for (const f of sessionFiles) {
+      const data = readJSON<{
+        id: string;
+        title: string;
+        time?: { created?: number; updated?: number };
+        revert?: { snapshot?: string };
+        summary?: { additions: number; deletions: number; files: number };
+      }>(path.join(sessionDir, f));
+      if (data) {
+        sessions.push({
+          id: data.id,
+          title: data.title,
+          created: data.time?.created || 0,
+          updated: data.time?.updated || 0,
+          snapshot: data.revert?.snapshot,
+          summary: data.summary,
+        });
+
+        const diffFile = path.join(sessionDiffDir, `${data.id}.json`);
+        if (fs.existsSync(diffFile)) {
+          const stat = fs.statSync(diffFile);
+          if (stat.size > 10) changeCount++;
+        }
+      }
+    }
+    sessions.sort((a, b) => b.updated - a.updated);
+  }
+
+  const lastSession = sessions[0] || null;
+
+  return {
+    id,
+    worktree: projectInfo?.worktree || "Unknown",
+    name: projectInfo?.worktree ? path.basename(projectInfo.worktree) : "Unknown",
+    created: projectInfo?.time?.created || null,
+    lastSession,
+    sessionCount: sessions.length,
+    changeCount,
+    gitDir,
+  };
+}
+
 export function getProjects(): Project[] {
   if (!fs.existsSync(SNAPSHOT_BASE)) return [];
 
@@ -94,65 +159,13 @@ export function getProjects(): Project[] {
       const stat = fs.statSync(path.join(SNAPSHOT_BASE, id));
       return stat.isDirectory();
     })
-    .map((id) => {
-      const projectInfo = readJSON<{ worktree?: string; time?: { created?: number } }>(
-        path.join(STORAGE_BASE, "project", `${id}.json`)
-      );
-      const sessionDir = path.join(STORAGE_BASE, "session", id);
-      const sessionDiffDir = path.join(STORAGE_BASE, "session_diff");
-
-      let sessions: Session[] = [];
-      let changeCount = 0;
-      
-      if (fs.existsSync(sessionDir)) {
-        const sessionFiles = fs.readdirSync(sessionDir).filter((f) => f.endsWith(".json"));
-        for (const f of sessionFiles) {
-          const data = readJSON<{
-            id: string;
-            title: string;
-            time?: { created?: number; updated?: number };
-            revert?: { snapshot?: string };
-            summary?: { additions: number; deletions: number; files: number };
-          }>(path.join(sessionDir, f));
-          if (data) {
-            sessions.push({
-              id: data.id,
-              title: data.title,
-              created: data.time?.created || 0,
-              updated: data.time?.updated || 0,
-              snapshot: data.revert?.snapshot,
-              summary: data.summary,
-            });
-            
-            const diffFile = path.join(sessionDiffDir, `${data.id}.json`);
-            if (fs.existsSync(diffFile)) {
-              const stat = fs.statSync(diffFile);
-              if (stat.size > 10) changeCount++;
-            }
-          }
-        }
-        sessions.sort((a, b) => b.updated - a.updated);
-      }
-
-      const lastSession = sessions[0] || null;
-
-      return {
-        id,
-        worktree: projectInfo?.worktree || "Unknown",
-        name: projectInfo?.worktree ? path.basename(projectInfo.worktree) : "Unknown",
-        created: projectInfo?.time?.created || null,
-        lastSession,
-        sessionCount: sessions.length,
-        changeCount,
-        gitDir: path.join(SNAPSHOT_BASE, id),
-      };
-    })
+    .map((id) => loadProjectById(id)!)
+    .filter((p): p is Project => p !== null)
     .sort((a, b) => (b.lastSession?.updated || 0) - (a.lastSession?.updated || 0));
 }
 
 export function getProject(id: string): Project | null {
-  const projects = getProjects();
-  return projects.find((p) => p.id === id) || null;
+  return loadProjectById(id);
 }
 
 export function getSessionChanges(projectId: string): SessionChange[] {
@@ -237,10 +250,10 @@ export function getSessionInfo(sessionId: string): { projectId: string; session:
 }
 
 export function getSnapshotFiles(projectId: string, hash: string): FileEntry[] {
-  const project = getProject(projectId);
-  if (!project) return [];
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return [];
 
-  const output = git(project.gitDir, `ls-tree -r "${hash}"`);
+  const output = git(gitDir, `ls-tree -r "${hash}"`);
   if (!output) return [];
 
   return output.split("\n").map((line) => {
@@ -257,17 +270,17 @@ export function getSnapshotFiles(projectId: string, hash: string): FileEntry[] {
 }
 
 export function getFileContent(projectId: string, blobHash: string): string {
-  const project = getProject(projectId);
-  if (!project) return "";
-  return git(project.gitDir, `cat-file -p "${blobHash}"`);
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return "";
+  return git(gitDir, `cat-file -p "${blobHash}"`);
 }
 
 export function getSnapshotArchive(projectId: string, hash: string): Buffer | null {
-  const project = getProject(projectId);
-  if (!project) return null;
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return null;
 
   try {
-    return execSync(`git --git-dir="${project.gitDir}" archive --format=zip "${hash}"`, {
+    return execSync(`git --git-dir="${gitDir}" archive --format=zip "${hash}"`, {
       maxBuffer: 100 * 1024 * 1024,
     });
   } catch {
@@ -276,18 +289,18 @@ export function getSnapshotArchive(projectId: string, hash: string): Buffer | nu
 }
 
 export function getDiff(projectId: string, fromHash: string, toHash: string): string {
-  const project = getProject(projectId);
-  if (!project) return "";
-  return git(project.gitDir, `diff "${fromHash}" "${toHash}"`);
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return "";
+  return git(gitDir, `diff "${fromHash}" "${toHash}"`);
 }
 
 export function getLatestSnapshot(projectId: string): string | null {
-  const project = getProject(projectId);
-  if (!project) return null;
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return null;
 
   try {
     const hash = execSync(
-      `git --git-dir="${project.gitDir}" write-tree`,
+      `git --git-dir="${gitDir}" write-tree`,
       { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }
     ).trim();
     return hash || null;
@@ -389,21 +402,19 @@ export function getSnapshots(projectId: string): Snapshot[] {
 }
 
 export function getSnapshotFileCount(projectId: string, hash: string): number {
-  const project = getProject(projectId);
-  if (!project) return 0;
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return 0;
 
-  const output = git(project.gitDir, `ls-tree -r "${hash}" | wc -l`);
+  const output = git(gitDir, `ls-tree -r "${hash}" | wc -l`);
   return parseInt(output.trim(), 10) || 0;
 }
 
 export function validateSnapshotHash(projectId: string, hash: string): boolean {
-  const project = getProject(projectId);
-  if (!project) return false;
+  const gitDir = getProjectGitDir(projectId);
+  if (!fs.existsSync(gitDir)) return false;
 
-  // Validate hash format
   if (!/^[a-f0-9]{40}$/.test(hash)) return false;
 
-  // Check if object exists and is a tree
-  const type = git(project.gitDir, `cat-file -t "${hash}"`);
+  const type = git(gitDir, `cat-file -t "${hash}"`);
   return type === "tree";
 }

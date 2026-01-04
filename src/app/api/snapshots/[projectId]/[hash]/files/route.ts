@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProject, validateSnapshotHash, getSnapshotFiles, getFileContent } from "@/lib/opencode";
+import { projectExists, validateSnapshotHash, getSnapshotFiles, getFileContent } from "@/lib/opencode";
 
 export async function GET(
   request: Request,
@@ -9,9 +9,7 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const filePath = searchParams.get("path");
 
-  const project = getProject(projectId);
-
-  if (!project) {
+  if (!projectExists(projectId)) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getProject, getSnapshots, getLatestSnapshot } from "@/lib/opencode";
+import { projectExists, getSnapshots, getLatestSnapshot } from "@/lib/opencode";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const project = getProject(id);
 
-  if (!project) {
+  if (!projectExists(id)) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 

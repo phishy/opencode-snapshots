@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getProject, getSessionChanges, getSnapshots, getLatestSnapshot } from "@/lib/opencode";
+import { getProject, getSessionChanges, getLatestSnapshot } from "@/lib/opencode";
 import { ChangeBrowser } from "./change-browser";
-import { SnapshotBrowser } from "./snapshot-browser";
+import { LazySnapshotBrowser } from "./lazy-snapshot-browser";
 import { ProjectTabs } from "./project-tabs";
 
 interface Props {
@@ -20,8 +20,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
   }
 
   const changes = getSessionChanges(id);
-  const snapshots = getSnapshots(id);
-  const latestSnapshot = getLatestSnapshot(id);
+  const latestSnapshot = tab === "snapshots" ? getLatestSnapshot(id) : null;
 
   return (
     <div>
@@ -41,9 +40,6 @@ export default async function ProjectPage({ params, searchParams }: Props) {
           <span className="text-oc-text-weak">
             <span className="text-oc-green">{changes.length}</span> with changes
           </span>
-          <span className="text-oc-text-weak">
-            <span className="text-oc-blue">{snapshots.length}</span> snapshots
-          </span>
         </div>
       </div>
 
@@ -62,10 +58,9 @@ export default async function ProjectPage({ params, searchParams }: Props) {
             <ChangeBrowser projectId={id} changes={changes} />
           )
         ) : (
-          <SnapshotBrowser
+          <LazySnapshotBrowser
             projectId={id}
             latestSnapshot={latestSnapshot}
-            snapshots={snapshots}
           />
         )}
       </div>
