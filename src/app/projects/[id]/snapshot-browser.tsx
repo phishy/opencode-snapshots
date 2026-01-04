@@ -134,12 +134,12 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
             <div key={dir}>
               <button
                 onClick={() => toggleDir(dir)}
-                className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-zinc-800"
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-oc-bg-elevated transition-colors"
                 style={{ paddingLeft: `${depth * 16 + 8}px` }}
               >
-                <span className="text-zinc-500">{isExpanded ? "▼" : "▶"}</span>
-                <span className="text-blue-400">{dir}/</span>
-                <span className="text-zinc-600 text-xs">({dirFiles.length})</span>
+                <span className="text-oc-text-weak">{isExpanded ? "▼" : "▶"}</span>
+                <span className="text-oc-blue">{dir}/</span>
+                <span className="text-oc-text-weak text-xs">({dirFiles.length})</span>
               </button>
               {isExpanded && (
                 <div>
@@ -160,14 +160,14 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
           <button
             key={file.path}
             onClick={() => loadFileContent(file)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm ${
+            className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors ${
               selectedFile?.path === file.path
-                ? "bg-blue-500/20 text-blue-300"
-                : "hover:bg-zinc-800 text-zinc-300"
+                ? "bg-oc-blue/20 text-oc-blue"
+                : "hover:bg-oc-bg-elevated text-oc-text-base"
             }`}
             style={{ paddingLeft: `${depth * 16 + 24}px` }}
           >
-            <span className="text-zinc-500">📄</span>
+            <span className="text-oc-text-weak text-xs">◇</span>
             {file.name}
           </button>
         ))}
@@ -186,26 +186,26 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
     <div className="grid gap-6 lg:grid-cols-[350px_minmax(0,1fr)]">
       <div className="space-y-4">
         {latestSnapshot && (
-          <div className="rounded-lg border border-emerald-800 bg-emerald-900/20 p-3">
+          <div className="rounded-lg border border-oc-green/30 bg-oc-green/10 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-400">Latest Snapshot</p>
-                <p className="font-mono text-xs text-zinc-500">{latestSnapshot.slice(0, 12)}...</p>
+                <p className="text-sm font-medium text-oc-green">Latest Snapshot</p>
+                <p className="font-mono text-xs text-oc-text-weak">{latestSnapshot.slice(0, 12)}...</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelectedSnapshot(latestSnapshot)}
                   className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
                     selectedSnapshot === latestSnapshot
-                      ? "bg-emerald-600 text-white"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                      ? "bg-oc-green text-oc-bg-base"
+                      : "bg-oc-bg-elevated text-oc-text-base hover:bg-oc-border"
                   }`}
                 >
                   Browse
                 </button>
                 <button
                   onClick={() => window.open(`/api/snapshots/${projectId}/${latestSnapshot}/download`, "_blank")}
-                  className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500"
+                  className="rounded bg-oc-green/20 border border-oc-green/30 px-3 py-1.5 text-xs font-medium text-oc-green transition-colors hover:bg-oc-green/30"
                 >
                   Download
                 </button>
@@ -215,12 +215,12 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
         )}
 
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-zinc-400">Snapshot Timeline</h3>
-          <p className="mb-3 text-xs text-zinc-600">{snapshots.length} snapshots found</p>
+          <h3 className="mb-2 text-sm font-medium text-oc-text-strong">Snapshot Timeline</h3>
+          <p className="mb-3 text-xs text-oc-text-weak">{snapshots.length} snapshots found</p>
           <div className="max-h-[500px] space-y-4 overflow-auto">
             {Object.entries(groupedSnapshots).map(([date, dateSnapshots]) => (
               <div key={date}>
-                <p className="mb-1 text-xs font-medium text-zinc-500">{date}</p>
+                <p className="mb-1 text-xs font-medium text-oc-text-weak">{date}</p>
                 <div className="space-y-1">
                   {dateSnapshots.map((snapshot) => (
                     <button
@@ -228,24 +228,24 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
                       onClick={() => setSelectedSnapshot(snapshot.hash)}
                       className={`w-full rounded border p-2 text-left transition-colors ${
                         selectedSnapshot === snapshot.hash
-                          ? "border-blue-500 bg-blue-500/10"
-                          : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                          ? "border-oc-blue/50 bg-oc-blue/10"
+                          : "border-oc-border-subtle bg-oc-bg-weak hover:border-oc-border"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs text-zinc-500">
+                        <span className="font-mono text-xs text-oc-text-weak">
                           {snapshot.hash.slice(0, 8)}
                         </span>
-                        <span className="text-xs text-zinc-600">
+                        <span className="text-xs text-oc-text-weak">
                           {formatRelativeTime(snapshot.timestamp)}
                         </span>
                       </div>
                       {snapshot.sessionTitle && (
-                        <p className="mt-1 truncate text-xs text-zinc-400">
+                        <p className="mt-1 truncate text-xs text-oc-text-base">
                           {snapshot.sessionTitle}
                         </p>
                       )}
-                      <p className="text-xs text-zinc-600">
+                      <p className="text-xs text-oc-text-weak">
                         {snapshot.type === "step-start" ? "Before step" : "After step"}
                       </p>
                     </button>
@@ -259,24 +259,24 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
 
       <div className="min-w-0">
         {selectedSnapshot ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
+          <div className="rounded-lg border border-oc-border-subtle bg-oc-bg-weak">
+            <div className="flex items-center justify-between border-b border-oc-border-subtle px-4 py-3">
               <div>
-                <p className="font-mono text-sm text-zinc-300">{selectedSnapshot.slice(0, 16)}...</p>
-                <p className="text-xs text-zinc-500">{files.length} files</p>
+                <p className="font-mono text-sm text-oc-text-base">{selectedSnapshot.slice(0, 16)}...</p>
+                <p className="text-xs text-oc-text-weak">{files.length} files</p>
               </div>
               <button
                 onClick={() => window.open(`/api/snapshots/${projectId}/${selectedSnapshot}/download`, "_blank")}
-                className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+                className="rounded bg-oc-green/20 border border-oc-green/30 px-4 py-2 text-sm font-medium text-oc-green transition-colors hover:bg-oc-green/30"
               >
                 Download ZIP
               </button>
             </div>
 
             <div className="grid lg:grid-cols-[250px_minmax(0,1fr)]">
-              <div className="max-h-[500px] overflow-auto border-r border-zinc-800 py-2">
+              <div className="max-h-[500px] overflow-auto border-r border-oc-border-subtle py-2">
                 {loading ? (
-                  <p className="px-4 py-2 text-sm text-zinc-500">Loading files...</p>
+                  <p className="px-4 py-2 text-sm text-oc-text-weak">Loading files...</p>
                 ) : (
                   renderFileTree(files)
                 )}
@@ -285,31 +285,31 @@ export function SnapshotBrowser({ projectId, latestSnapshot, snapshots }: Props)
               <div className="max-h-[500px] overflow-auto">
                 {selectedFile ? (
                   <div>
-                    <div className="sticky top-0 border-b border-zinc-800 bg-zinc-900 px-4 py-2">
-                      <p className="font-mono text-sm text-zinc-300">{selectedFile.path}</p>
+                    <div className="sticky top-0 border-b border-oc-border-subtle bg-oc-bg-weak px-4 py-2">
+                      <p className="font-mono text-sm text-oc-text-base">{selectedFile.path}</p>
                     </div>
-                    <pre className="p-4 text-xs leading-relaxed">
+                    <pre className="p-4 text-xs leading-relaxed font-mono">
                       {fileContent.split("\n").map((line, i) => (
                         <div key={i} className="flex">
-                          <span className="mr-4 w-8 select-none text-right text-zinc-600">
+                          <span className="mr-4 w-8 select-none text-right text-oc-text-weak">
                             {i + 1}
                           </span>
-                          <code className="text-zinc-300">{line || " "}</code>
+                          <code className="text-oc-text-base">{line || " "}</code>
                         </div>
                       ))}
                     </pre>
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center p-8">
-                    <p className="text-zinc-500">Select a file to view contents</p>
+                    <p className="text-oc-text-weak">Select a file to view contents</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
-            <p className="text-zinc-400">Select a snapshot to browse files</p>
+          <div className="rounded-lg border border-oc-border-subtle bg-oc-bg-weak p-8 text-center">
+            <p className="text-oc-text-weak">Select a snapshot to browse files</p>
           </div>
         )}
       </div>

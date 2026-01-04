@@ -3,12 +3,41 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --oc-bg-base: #131010;
+  --oc-bg-weak: #1c1717;
+  --oc-bg-strong: #151313;
+  --oc-bg-elevated: #252121;
+  --oc-border: #4b4646;
+  --oc-border-subtle: #252121;
+  --oc-text-strong: #f1ecec;
+  --oc-text-base: #b7b1b1;
+  --oc-text-weak: #716c6b;
+  --oc-green: #37db2e;
+  --oc-red: #ff917b;
+  --oc-blue: #89b5ff;
+  --oc-brand: #fdffca;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--oc-bg-base);
+  color: var(--oc-text-base);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--oc-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--oc-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--oc-text-weak);
 }

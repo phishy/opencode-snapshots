@@ -26,23 +26,23 @@ export default async function ProjectPage({ params, searchParams }: Props) {
   return (
     <div>
       <div className="mb-6">
-        <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-300">
+        <Link href="/" className="text-sm text-oc-text-weak hover:text-oc-text-base transition-colors">
           &larr; Back to projects
         </Link>
       </div>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{project.name}</h1>
-        <p className="mt-1 text-zinc-400">{project.worktree}</p>
-        <div className="mt-2 flex gap-4 text-sm text-zinc-500">
-          <span>
-            <span className="text-zinc-300">{project.sessionCount}</span> sessions
+        <h1 className="text-xl font-medium text-oc-text-strong">{project.name}</h1>
+        <p className="mt-1 text-sm text-oc-text-weak">{project.worktree}</p>
+        <div className="mt-3 flex gap-6 text-sm">
+          <span className="text-oc-text-weak">
+            <span className="text-oc-text-base">{project.sessionCount}</span> sessions
           </span>
-          <span>
-            <span className="text-emerald-400">{changes.length}</span> with changes
+          <span className="text-oc-text-weak">
+            <span className="text-oc-green">{changes.length}</span> with changes
           </span>
-          <span>
-            <span className="text-blue-400">{snapshots.length}</span> snapshots
+          <span className="text-oc-text-weak">
+            <span className="text-oc-blue">{snapshots.length}</span> snapshots
           </span>
         </div>
       </div>
@@ -52,9 +52,9 @@ export default async function ProjectPage({ params, searchParams }: Props) {
       <div className="mt-6">
         {tab === "changes" ? (
           changes.length === 0 ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
-              <p className="text-zinc-400">No file changes recorded for this project.</p>
-              <p className="mt-2 text-sm text-zinc-500">
+            <div className="rounded-lg border border-oc-border-subtle bg-oc-bg-weak p-8 text-center">
+              <p className="text-oc-text-base">No file changes recorded for this project.</p>
+              <p className="mt-2 text-sm text-oc-text-weak">
                 Changes are recorded when OpenCode modifies files during a session.
               </p>
             </div>

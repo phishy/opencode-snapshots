@@ -14,15 +14,15 @@ export function ProjectTabs({ activeTab, projectId }: Props) {
   ];
 
   return (
-    <div className="flex gap-1 rounded-lg bg-zinc-900 p-1">
+    <div className="flex gap-1 rounded-lg bg-oc-bg-weak p-1">
       {tabs.map((tab) => (
         <Link
           key={tab.id}
           href={`/projects/${projectId}?tab=${tab.id}`}
           className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === tab.id
-              ? "bg-zinc-800 text-white"
-              : "text-zinc-400 hover:text-zinc-300"
+              ? "bg-oc-bg-elevated text-oc-text-strong"
+              : "text-oc-text-weak hover:text-oc-text-base"
           }`}
         >
           {tab.label}

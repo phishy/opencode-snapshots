@@ -35,6 +35,19 @@ function formatDate(ts: number) {
   });
 }
 
+function formatRelativeTime(ts: number) {
+  const diff = Date.now() - ts;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return "1d ago";
+  return `${days}d ago`;
+}
+
 function computeDiff(before: string, after: string): string[] {
   const beforeLines = before.split("\n");
   const afterLines = after.split("\n");
@@ -72,29 +85,29 @@ function DiffViewer({ file }: { file: FileDiff }) {
   const isDeleted = file.before && !file.after;
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden min-w-0">
-      <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
-        <span className="font-mono text-sm text-zinc-300">{file.file}</span>
-        <div className="flex items-center gap-1">
-          {isNew && <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400">new</span>}
-          {isDeleted && <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-400">deleted</span>}
+    <div className="rounded-lg border border-oc-border-subtle bg-oc-bg-weak overflow-hidden min-w-0">
+      <div className="flex items-center justify-between border-b border-oc-border-subtle px-4 py-2">
+        <span className="font-mono text-sm text-oc-text-base">{file.file}</span>
+        <div className="flex items-center gap-2">
+          {isNew && <span className="rounded bg-oc-green/20 px-2 py-0.5 text-xs text-oc-green">new</span>}
+          {isDeleted && <span className="rounded bg-oc-red/20 px-2 py-0.5 text-xs text-oc-red">deleted</span>}
           {!isNew && !isDeleted && (
-            <div className="flex rounded-lg bg-zinc-800 p-0.5 text-xs">
+            <div className="flex rounded-lg bg-oc-bg-base p-0.5 text-xs">
               <button
                 onClick={() => setViewMode("diff")}
-                className={`rounded px-2 py-1 ${viewMode === "diff" ? "bg-zinc-700 text-white" : "text-zinc-400"}`}
+                className={`rounded px-2 py-1 transition-colors ${viewMode === "diff" ? "bg-oc-bg-elevated text-oc-text-strong" : "text-oc-text-weak hover:text-oc-text-base"}`}
               >
                 Diff
               </button>
               <button
                 onClick={() => setViewMode("before")}
-                className={`rounded px-2 py-1 ${viewMode === "before" ? "bg-zinc-700 text-white" : "text-zinc-400"}`}
+                className={`rounded px-2 py-1 transition-colors ${viewMode === "before" ? "bg-oc-bg-elevated text-oc-text-strong" : "text-oc-text-weak hover:text-oc-text-base"}`}
               >
                 Before
               </button>
               <button
                 onClick={() => setViewMode("after")}
-                className={`rounded px-2 py-1 ${viewMode === "after" ? "bg-zinc-700 text-white" : "text-zinc-400"}`}
+                className={`rounded px-2 py-1 transition-colors ${viewMode === "after" ? "bg-oc-bg-elevated text-oc-text-strong" : "text-oc-text-weak hover:text-oc-text-base"}`}
               >
                 After
               </button>
@@ -103,26 +116,26 @@ function DiffViewer({ file }: { file: FileDiff }) {
         </div>
       </div>
       <div className="max-h-[400px] overflow-auto">
-        <pre className="text-xs leading-relaxed min-w-0">
+        <pre className="text-xs leading-relaxed min-w-0 font-mono">
           {viewMode === "diff" ? (
             computeDiff(file.before, file.after).map((line, i) => {
               let className = "px-4 py-0.5 block ";
               if (line.startsWith("+")) {
-                className += "text-emerald-400 bg-emerald-500/10";
+                className += "text-oc-green bg-oc-green/10";
               } else if (line.startsWith("-")) {
-                className += "text-red-400 bg-red-500/10";
+                className += "text-oc-red bg-oc-red/10";
               } else {
-                className += "text-zinc-400";
+                className += "text-oc-text-weak";
               }
               return <code key={i} className={className}>{line || " "}</code>;
             })
           ) : viewMode === "before" ? (
             file.before.split("\n").map((line, i) => (
-              <code key={i} className="px-4 py-0.5 block text-zinc-400">{line || " "}</code>
+              <code key={i} className="px-4 py-0.5 block text-oc-text-weak">{line || " "}</code>
             ))
           ) : (
             file.after.split("\n").map((line, i) => (
-              <code key={i} className="px-4 py-0.5 block text-zinc-400">{line || " "}</code>
+              <code key={i} className="px-4 py-0.5 block text-oc-text-weak">{line || " "}</code>
             ))
           )}
         </pre>
@@ -143,30 +156,32 @@ export function ChangeBrowser({ changes }: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-[350px_minmax(0,1fr)]">
       <div>
-        <h2 className="mb-2 text-lg font-semibold">Sessions with Changes</h2>
-        <p className="mb-3 text-xs text-zinc-500">
+        <h2 className="mb-2 text-sm font-medium text-oc-text-strong">Sessions with Changes</h2>
+        <p className="mb-3 text-xs text-oc-text-weak">
           Click to view file changes from each session.
         </p>
-        <div className="space-y-2 max-h-[600px] overflow-auto">
+        <div className="space-y-1 max-h-[600px] overflow-auto">
           {changes.map((change) => (
             <button
               key={change.sessionId}
               onClick={() => selectChange(change)}
               className={`w-full rounded-lg border p-3 text-left transition-colors ${
                 selectedChange?.sessionId === change.sessionId
-                  ? "border-blue-500 bg-blue-500/10"
-                  : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                  ? "border-oc-blue/50 bg-oc-blue/10"
+                  : "border-oc-border-subtle bg-oc-bg-weak hover:border-oc-border"
               }`}
             >
-              <p className="text-sm font-medium text-white">{change.title}</p>
-              <p className="mt-1 text-xs text-zinc-500">{formatDate(change.updated)}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-oc-text-strong truncate">{change.title}</p>
+                <span className="text-xs text-oc-text-weak shrink-0">{formatRelativeTime(change.updated)}</span>
+              </div>
               <p className="mt-1 text-xs">
-                <span className="text-zinc-400">{change.files.length} files</span>
+                <span className="text-oc-text-weak">{change.files.length} files</span>
                 {change.summary && (
                   <>
-                    {" • "}
-                    <span className="text-emerald-400">+{change.summary.additions}</span>{" "}
-                    <span className="text-red-400">-{change.summary.deletions}</span>
+                    {" "}
+                    <span className="text-oc-green">+{change.summary.additions}</span>{" "}
+                    <span className="text-oc-red">-{change.summary.deletions}</span>
                   </>
                 )}
               </p>
@@ -180,12 +195,12 @@ export function ChangeBrowser({ changes }: Props) {
           <div>
             <div className="mb-4 flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{selectedChange.title}</h2>
-                <p className="text-sm text-zinc-500">{formatDate(selectedChange.updated)}</p>
+                <h2 className="text-sm font-medium text-oc-text-strong">{selectedChange.title}</h2>
+                <p className="text-xs text-oc-text-weak">{formatDate(selectedChange.updated)}</p>
               </div>
               <button
                 onClick={() => window.open(`/api/sessions/${selectedChange.sessionId}/download`, "_blank")}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+                className="rounded-lg bg-oc-green/20 border border-oc-green/30 px-4 py-2 text-sm font-medium text-oc-green transition-colors hover:bg-oc-green/30"
               >
                 Download ZIP
               </button>
@@ -198,8 +213,8 @@ export function ChangeBrowser({ changes }: Props) {
                   onClick={() => setSelectedFile(file)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-mono transition-colors ${
                     selectedFile?.file === file.file
-                      ? "border-blue-500 bg-blue-500/10 text-blue-300"
-                      : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700"
+                      ? "border-oc-blue/50 bg-oc-blue/10 text-oc-blue"
+                      : "border-oc-border-subtle bg-oc-bg-weak text-oc-text-weak hover:border-oc-border"
                   }`}
                 >
                   {file.file.split("/").pop()}
@@ -210,8 +225,8 @@ export function ChangeBrowser({ changes }: Props) {
             {selectedFile && <DiffViewer file={selectedFile} />}
           </div>
         ) : (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
-            <p className="text-zinc-400">Select a session to view changes</p>
+          <div className="rounded-lg border border-oc-border-subtle bg-oc-bg-weak p-8 text-center">
+            <p className="text-oc-text-weak">Select a session to view changes</p>
           </div>
         )}
       </div>

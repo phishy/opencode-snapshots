@@ -12,49 +12,67 @@ function formatDate(ts: number | null) {
   });
 }
 
+function formatRelativeTime(ts: number | null) {
+  if (!ts) return "";
+  const diff = Date.now() - ts;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} minutes ago`;
+  if (hours < 24) return `${hours} hours ago`;
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}
+
 export default function HomePage() {
   const projects = getProjects();
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Projects</h1>
+      <h1 className="mb-6 text-xl font-medium text-oc-text-strong">Projects</h1>
 
       {projects.length === 0 ? (
-        <p className="text-zinc-400">No projects found.</p>
+        <p className="text-oc-text-weak">No projects found.</p>
       ) : (
-        <div className="grid gap-4">
+        <div className="space-y-1">
           {projects.map((project) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="block rounded-lg border border-zinc-800 bg-zinc-900 p-5 transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
+              className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-oc-bg-weak transition-colors group"
             >
-                <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{project.name}</h2>
-                  <p className="mt-1 text-sm text-zinc-400">{project.worktree}</p>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-zinc-500">
-                    <span className="text-zinc-300">{project.sessionCount}</span> sessions
-                  </span>
-                  <span className="text-zinc-500">
-                    <span className="text-emerald-400">{project.changeCount}</span> with changes
-                  </span>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex items-center justify-center w-6 h-6 rounded bg-oc-bg-elevated text-xs font-medium text-oc-text-base">
+                  {project.name.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-medium text-oc-text-strong truncate">
+                    {project.name}
+                  </h2>
+                  {project.lastSession && (
+                    <p className="text-xs text-oc-text-weak truncate mt-0.5">
+                      {project.lastSession.title}
+                    </p>
+                  )}
                 </div>
               </div>
-
-              {project.lastSession && (
-                <div className="mt-3 border-t border-zinc-800 pt-3">
-                  <p className="text-sm text-zinc-400">
-                    <span className="text-zinc-500">Last:</span>{" "}
-                    <span className="text-zinc-300">{project.lastSession.title}</span>
-                  </p>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    {formatDate(project.lastSession.updated)}
-                  </p>
-                </div>
-              )}
+              <div className="flex items-center gap-6 text-xs shrink-0">
+                <span className="text-oc-text-weak">
+                  {project.sessionCount} sessions
+                </span>
+                {project.changeCount > 0 && (
+                  <span className="text-oc-green">
+                    +{project.changeCount} changes
+                  </span>
+                )}
+                {project.lastSession && (
+                  <span className="text-oc-text-weak">
+                    {formatRelativeTime(project.lastSession.updated)}
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </div>
