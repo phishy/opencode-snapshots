@@ -418,3 +418,210 @@ export function validateSnapshotHash(projectId: string, hash: string): boolean {
   const type = git(gitDir, `cat-file -t "${hash}"`);
   return type === "tree";
 }
+
+export interface SearchResult {
+  sessionId: string;
+  sessionTitle: string;
+  projectId: string;
+  projectName: string;
+  messageId: string;
+  text: string;
+  timestamp: number;
+  role: "user" | "assistant";
+  snapshot?: string;
+}
+
+interface SearchIndexEntry {
+  sessionId: string;
+  projectId: string;
+  messageId: string;
+  text: string;
+  timestamp: number;
+  role: "user" | "assistant";
+}
+
+let searchIndex: SearchIndexEntry[] | null = null;
+let sessionMetaCache: Map<string, { title: string; projectId: string }> | null = null;
+let projectNameCache: Map<string, string> | null = null;
+
+function buildSessionMetaCache(): Map<string, { title: string; projectId: string }> {
+  if (sessionMetaCache) return sessionMetaCache;
+  
+  sessionMetaCache = new Map();
+  const sessionBase = path.join(STORAGE_BASE, "session");
+  if (!fs.existsSync(sessionBase)) return sessionMetaCache;
+
+  for (const projectId of fs.readdirSync(sessionBase)) {
+    const projectSessionDir = path.join(sessionBase, projectId);
+    try {
+      if (!fs.statSync(projectSessionDir).isDirectory()) continue;
+    } catch {
+      continue;
+    }
+
+    for (const f of fs.readdirSync(projectSessionDir).filter((f) => f.endsWith(".json"))) {
+      const data = readJSON<{ id: string; title: string }>(path.join(projectSessionDir, f));
+      if (data) {
+        sessionMetaCache.set(data.id, { title: data.title, projectId });
+      }
+    }
+  }
+
+  return sessionMetaCache;
+}
+
+function buildProjectNameCache(): Map<string, string> {
+  if (projectNameCache) return projectNameCache;
+
+  projectNameCache = new Map();
+  const projectDir = path.join(STORAGE_BASE, "project");
+  if (!fs.existsSync(projectDir)) return projectNameCache;
+
+  for (const f of fs.readdirSync(projectDir).filter((f) => f.endsWith(".json"))) {
+    const projectId = f.replace(".json", "");
+    const data = readJSON<{ worktree?: string }>(path.join(projectDir, f));
+    if (data?.worktree) {
+      projectNameCache.set(projectId, path.basename(data.worktree));
+    }
+  }
+
+  return projectNameCache;
+}
+
+function buildSearchIndex(): SearchIndexEntry[] {
+  if (searchIndex) return searchIndex;
+
+  searchIndex = [];
+  const sessionMeta = buildSessionMetaCache();
+  const messageBase = path.join(STORAGE_BASE, "message");
+  const partBase = path.join(STORAGE_BASE, "part");
+
+  if (!fs.existsSync(partBase)) return searchIndex;
+
+  const messageDirs = fs.readdirSync(partBase).filter((d) => {
+    try {
+      return fs.statSync(path.join(partBase, d)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+  for (const messageDir of messageDirs) {
+    const messagePath = path.join(partBase, messageDir);
+    let partFiles: string[];
+    try {
+      partFiles = fs.readdirSync(messagePath).filter((f) => f.endsWith(".json"));
+    } catch {
+      continue;
+    }
+
+    for (const partFile of partFiles) {
+      const part = readJSON<{
+        id: string;
+        sessionID: string;
+        messageID: string;
+        type: string;
+        text?: string;
+        time?: { start?: number; end?: number };
+      }>(path.join(messagePath, partFile));
+
+      if (!part || part.type !== "text" || !part.text) continue;
+
+      const meta = sessionMeta.get(part.sessionID);
+      if (!meta) continue;
+
+      let timestamp = part.time?.start || part.time?.end || 0;
+      if (!timestamp) {
+        timestamp = extractTimestampFromId(part.id);
+      }
+
+      let role: "user" | "assistant" = "assistant";
+      if (fs.existsSync(messageBase)) {
+        const sessionMsgDir = path.join(messageBase, part.sessionID);
+        if (fs.existsSync(sessionMsgDir)) {
+          const msgFile = path.join(sessionMsgDir, `${part.messageID}.json`);
+          const msgData = readJSON<{ role?: string }>(msgFile);
+          if (msgData?.role === "user") role = "user";
+        }
+      }
+
+      searchIndex.push({
+        sessionId: part.sessionID,
+        projectId: meta.projectId,
+        messageId: part.messageID,
+        text: part.text,
+        timestamp,
+        role,
+      });
+    }
+  }
+
+  searchIndex.sort((a, b) => b.timestamp - a.timestamp);
+  return searchIndex;
+}
+
+export function searchPrompts(query: string, limit = 50): SearchResult[] {
+  const index = buildSearchIndex();
+  const sessionMeta = buildSessionMetaCache();
+  const projectNames = buildProjectNameCache();
+  const lowerQuery = query.toLowerCase();
+
+  const results: SearchResult[] = [];
+
+  for (const entry of index) {
+    if (!entry.text.toLowerCase().includes(lowerQuery)) continue;
+
+    const meta = sessionMeta.get(entry.sessionId);
+    if (!meta) continue;
+
+    results.push({
+      sessionId: entry.sessionId,
+      sessionTitle: meta.title,
+      projectId: meta.projectId,
+      projectName: projectNames.get(meta.projectId) || "Unknown",
+      messageId: entry.messageId,
+      text: entry.text,
+      timestamp: entry.timestamp,
+      role: entry.role,
+    });
+
+    if (results.length >= limit) break;
+  }
+
+  return results;
+}
+
+export function getSnapshotForMessage(sessionId: string, messageId: string): string | null {
+  const partBase = path.join(STORAGE_BASE, "part");
+  const messagePath = path.join(partBase, messageId);
+
+  if (!fs.existsSync(messagePath)) return null;
+
+  let partFiles: string[];
+  try {
+    partFiles = fs.readdirSync(messagePath).filter((f) => f.endsWith(".json"));
+  } catch {
+    return null;
+  }
+
+  for (const partFile of partFiles) {
+    const part = readJSON<{
+      sessionID: string;
+      type: string;
+      snapshot?: string;
+    }>(path.join(messagePath, partFile));
+
+    if (part?.sessionID === sessionId && part?.snapshot) {
+      return part.snapshot;
+    }
+  }
+
+  return null;
+}
+
+export function getSearchIndexStats(): { indexed: boolean; count: number } {
+  return {
+    indexed: searchIndex !== null,
+    count: searchIndex?.length || 0,
+  };
+}

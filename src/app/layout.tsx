@@ -74,10 +74,32 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-oc-bg-base text-oc-text-base">
         <nav className="border-b border-oc-border-subtle px-6 py-4">
-          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <LogoMark />
-            <span className="text-sm font-medium text-oc-text-weak">snapshots</span>
-          </a>
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <LogoMark />
+              <span className="text-sm font-medium text-oc-text-weak">snapshots</span>
+            </a>
+            <a
+              href="/search"
+              className="flex items-center gap-2 text-sm text-oc-text-weak hover:text-oc-text-base transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              Search
+            </a>
+          </div>
         </nav>
         <main className="container mx-auto px-6 py-8 max-w-6xl">{children}</main>
       </body>

@@ -132,6 +132,23 @@ Uses OpenCode's official color palette from their UI package:
 
 All colors available as `bg-oc-*`, `text-oc-*`, `border-oc-*` Tailwind classes.
 
+### Search Feature
+
+The search feature (`/search`) lets users find snapshots by searching conversation text.
+
+**How it works:**
+1. First search builds an in-memory index by scanning all `storage/part/**/*.json` files (~44k files)
+2. Index is cached for the server's lifetime
+3. Subsequent searches filter the cached index (sub-second)
+
+**Performance:**
+- First search: ~13 seconds (index building)
+- Subsequent searches: ~0.5 seconds
+
+**Don't:**
+- Call `searchPrompts()` without caching expectations
+- Rebuild index on every request
+
 ## Testing Changes
 
 ```bash
