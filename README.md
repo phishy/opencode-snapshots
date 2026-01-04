@@ -62,6 +62,8 @@ node bin/ocs.mjs serve    # Web server
 
 The TUI provides keyboard-driven navigation optimized for quick browsing.
 
+<img src="screenshot-tui.png" width="100%" />
+
 ### Keyboard Shortcuts
 
 | Key | Action |
